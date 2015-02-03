@@ -1,10 +1,17 @@
 #include <ncurses.h>
-#include <fstream>
 #include <vector>
+#include "CSVReader.h"
 using namespace std;
 
+void init_curses ()
+{
+	initscr();
+	cbreak();
+	noecho();
+	keypad(stdscr, true);
+}
 int main ()
 {
-
+	init_curses();
 	return 0;
 }
