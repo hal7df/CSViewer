@@ -10,7 +10,7 @@ void init_curses ()
 	noecho();
 	keypad(stdscr, true);
 }
-int main ()
+int main (int argc, char* argv[])
 {
 	init_curses();
 	return 0;
