@@ -19,7 +19,7 @@ CSVReader::CSVReader(const char* fname) {
 }
 
 CSVReader::~CSVReader() {
-	// TODO Auto-generated destructor stub
+	clear();
 }
 
 void CSVReader::read_file(const char* fname) {
