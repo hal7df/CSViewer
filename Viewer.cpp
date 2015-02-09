@@ -82,6 +82,8 @@ void Viewer::draw() {
 	maxCol = x-1;
 	startY = 0;
 
+	erase();
+
 	if (m_args.persist > 0)
 	{
 		for (int y = 0; y < m_args.persist; y++)
