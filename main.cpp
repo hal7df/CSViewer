@@ -15,24 +15,25 @@ argData parseArgs (int argc, char* argv[]);
 
 int main (int argc, char* argv[])
 {
-	argData args;
 	if (argc < 2)
 		usageMessage();
 	else
 	{
-		args = parseArgs(argc, argv);
+		argData args = parseArgs(argc, argv);
 		cout << "Loading..." << endl;
+
+		CSVReader* csv;
+		Viewer* viewer;
+
+		csv = new CSVReader(args.fName.c_str(),',');
+		viewer = new Viewer (csv,args);
+
+		viewer->view();
+
+		delete csv;
+		delete viewer;
 	}
 
-	CSVReader* csv;
-	Viewer* viewer;
-
-	csv = new CSVReader(args.fName.c_str(),',');
-	viewer = new Viewer (csv,args);
-
-	viewer->view();
-
-	delete csv;
 	return 0;
 }
 

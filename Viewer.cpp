@@ -67,11 +67,7 @@ void Viewer::init_curses() {
 
 //** Drawing functions **
 void Viewer::draw() {
-	unsigned maxCol;
-	int cumul;
-	unsigned x, startY;
-
-	cumul = 0;
+	unsigned maxCol, x, startY;
 
 	for (x = m_col+1; x < m_csv->getCols(); x++)
 	{
@@ -125,6 +121,10 @@ void Viewer::move(int deltaX, int deltaY) {
 }
 
 void Viewer::move(int percent) {
+
+}
+
+void Viewer::jump_dialog() {
 
 }
 
