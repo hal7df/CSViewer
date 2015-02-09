@@ -19,7 +19,7 @@ using namespace std;
 class CSVReader {
 public:
 	CSVReader();
-	CSVReader(const char* fname);
+	CSVReader(const char* fname, char delim = ',');
 	virtual ~CSVReader();
 
 	//File management functions
@@ -28,16 +28,23 @@ public:
 	void clear () { m_data.clear(); }
 
 	//Data access functions
-	string getCell (int row, int col) { return m_data.at(row).at(col); }
+	string getCell (unsigned row, unsigned col);
+	unsigned getColWidth (unsigned col);
+	unsigned getRows() { return m_data.size(); }
+	unsigned getCols() { return m_colWidth.size(); }
 	bool good () { return m_data.size() != 0; }
 
 	//Settings
 	void  setDelim (char delim) { m_delim = delim; refresh(); }
 private:
+	void countCols();
+
 	ifstream m_fin;
 	vector<vector<string> > m_data;
 	const char* m_fname;
 	char m_delim;
+
+	vector<unsigned> m_colWidth;
 };
 
 #endif /* CSVREADER_H_ */

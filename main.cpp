@@ -1,4 +1,3 @@
-#include <ncurses.h>
 #include <vector>
 #include <iostream>
 #include <cstdlib>
@@ -6,45 +5,37 @@
 #include <cstring>
 #include <string>
 #include "CSVReader.h"
+#include "Viewer.h"
 using namespace std;
 
-struct argData {
-	string fName;
-	int persist = 0;
-	vector<int> cols;
-};
-
-void init_curses();
+//COMMANDLINE INTERFACE
 void usageMessage();
 void version();
 argData parseArgs (int argc, char* argv[]);
 
 int main (int argc, char* argv[])
 {
+	argData args;
 	if (argc < 2)
 		usageMessage();
 	else
 	{
-		argData args = parseArgs(argc, argv);
-		cout << "Filename: " << args.fName << endl;
-		cout << "Persist rows: " << args.persist << endl;
-		cout << "Columns: ";
-		for (unsigned x = 0; x < args.cols.size(); x++)
-			cout << args.cols.at(x) << ' ';
-		cout << endl;
-		exit(0);
+		args = parseArgs(argc, argv);
+		cout << "Loading..." << endl;
 	}
-	init_curses();
+
+	CSVReader* csv;
+	Viewer* viewer;
+
+	csv = new CSVReader(args.fName.c_str(),',');
+	viewer = new Viewer (csv,args);
+
+	viewer->view();
+
+	delete csv;
 	return 0;
 }
 
-void init_curses ()
-{
-	initscr();
-	cbreak();
-	noecho();
-	keypad(stdscr, true);
-}
 
 void usageMessage()
 {
