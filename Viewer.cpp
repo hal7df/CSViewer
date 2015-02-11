@@ -184,5 +184,5 @@ unsigned Viewer::startX(unsigned startCol, unsigned col) {
 }
 
 bool Viewer::lastColOnScreen (unsigned col) {
-	return COLS > (startX(col-1,m_csv->getCols()-1));
+	return COLS > (startX(col-1,m_csv->getCols()-1)) + (m_csv->getColWidth(m_csv->getCols()-1));
 }
