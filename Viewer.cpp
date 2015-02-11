@@ -14,6 +14,8 @@ Viewer::Viewer(CSVReader* csv, argData args) {
 
 	m_row = m_args.persist;
 	m_col = 0;
+
+	f_moved = 0;
 }
 
 Viewer::~Viewer() {
@@ -21,14 +23,14 @@ Viewer::~Viewer() {
 }
 
 void Viewer::view() {
-	char c;
-	int rows;
+	int c;
+	init_curses();
 
 	do
 	{
 		draw();
 		c = getch();
-		rows = getmaxy(stdscr);
+		f_moved = 0;
 
 		switch (c)
 		{
@@ -47,13 +49,15 @@ void Viewer::view() {
 		case 'j':
 			jump_dialog();
 		case KEY_PPAGE:
-			move(0,-(rows-(2+m_args.persist)));
+			move(0,-(LINES-(2+m_args.persist)));
 			break;
 		case KEY_NPAGE:
-			move(0,(rows-(2+m_args.persist)));
+			move(0,(LINES-(2+m_args.persist)));
 			break;
 		}
 	}while(c != 'q');
+
+	end_curses();
 }
 
 //private ***************
@@ -84,7 +88,7 @@ void Viewer::draw() {
 	{
 		for (int y = 0; y < m_args.persist; y++)
 		{
-			for (x = m_col; x < maxCol; x++)
+			for (x = m_col; x < maxCol+1; x++)
 			{
 				attron(A_BOLD);
 				mvprintw(y,startX(m_col,x)," %s",m_csv->getCell(y,x).c_str());
@@ -99,7 +103,7 @@ void Viewer::draw() {
 	}
 	for (unsigned y = m_row; y < (m_row+(LINES-(1+startY))); y++)
 	{
-		for (x = m_col; x < maxCol; x++)
+		for (x = m_col; x < maxCol+1; x++)
 		{
 			mvprintw((startY+(y-m_row)),startX(m_col,x)," %s",m_csv->getCell(y,x).c_str());
 			mvprintw((startY+(y-m_row)),(startX(m_col,x+1)-2)," |");
@@ -107,25 +111,63 @@ void Viewer::draw() {
 	}
 
 	attron(A_REVERSE);
-	mvprintw(LINES,0,"Line %d/",(m_row+(LINES-(1+startY))));
+	mvprintw(LINES-1,0,"Row %d/",(m_row+(LINES-(1+startY))));
 	printw("%d ",m_csv->getRows());
-	printw("(%d%%)",(int)((m_row+(LINES-(1+startY)))/m_csv->getRows()));
+	printw("(%d%%)",(int)(100*(m_row+(LINES-(1+startY)))/m_csv->getRows()));
+	printw(" Column %d/",(maxCol+1));
+	printw("%d ",m_csv->getCols());
+	printw("(%d%%)",(int)(100*(maxCol+1)/m_csv->getCols()));
 	attroff(A_REVERSE);
 
 	refresh();
 }
 
 void Viewer::move(int deltaX, int deltaY) {
-	m_row += deltaY;
-	m_col += deltaX;
+	int nonData;
+	if (m_args.persist > 0)
+		nonData = 3;
+	else
+		nonData = 2;
+
+	if ((unsigned)(m_row+deltaY) < (m_csv->getRows()-(LINES-(m_args.persist+nonData))) && (m_row+deltaY) >= (m_args.persist))
+		m_row += deltaY;
+	else if (abs(deltaY) > 1)
+	{
+		if (deltaY < 0)
+			m_row=m_args.persist;
+		else
+			m_row=(m_csv->getRows()-(LINES-(m_args.persist+(nonData-1))));
+	}
+
+	if (((unsigned)(m_col+deltaX) < m_csv->getCols() && !lastColOnScreen(m_col+deltaX)) && (m_col+deltaX) >= 0)
+		m_col += deltaX;
+	else if (abs(deltaX) > 1)
+	{
+		if (deltaX < 0)
+			m_col = 0;
+		else
+			m_col=(m_csv->getCols()-1);
+	}
+
+	f_moved = 1;
 }
 
 void Viewer::move(int percent) {
+	double decimal = ((double)(percent))/100.;
+	unsigned line = (unsigned)100*(decimal*((double)(m_csv->getRows())));
 
+	move(0,line-m_row);
 }
 
 void Viewer::jump_dialog() {
+	WINDOW* dialog;
 
+	dialog = newwin(7,40,(LINES/2)-3,(COLS/2)-20);
+	box(dialog,0,0);
+
+	mvwprintw(dialog,2,2,"Jump to line (Enter % at end for percent:");
+
+	delwin(dialog);
 }
 
 //** Other functions ****
@@ -139,4 +181,8 @@ unsigned Viewer::startX(unsigned startCol, unsigned col) {
 	}
 
 	return cumul;
+}
+
+bool Viewer::lastColOnScreen (unsigned col) {
+	return COLS > (startX(col-1,m_csv->getCols()-1));
 }

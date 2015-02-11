@@ -10,6 +10,7 @@
 
 #include <ncurses.h>
 #include <vector>
+#include <cmath>
 #include "CSVReader.h"
 
 struct argData {
@@ -37,10 +38,12 @@ private:
 
 	//Other functions
 	unsigned startX(unsigned startCol, unsigned col);
+	bool lastColOnScreen(unsigned col);
 
 	CSVReader* m_csv;
 	argData m_args;
 	int m_row, m_col;
+	int f_moved;
 };
 
 #endif /* VIEWER_H_ */
