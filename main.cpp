@@ -55,7 +55,7 @@ void usageMessage()
 
 void version()
 {
-	cout << "csviewer 0.1" << endl;
+	cout << "csviewer 0.1-alpha0" << endl;
 	cout << "Author: Paul Bonnen" << endl;
 
 	exit(0);
