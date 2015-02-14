@@ -15,7 +15,7 @@
 
 struct argData {
 	string fName;
-	int persist = 0;
+	int persist;
 	vector<int> cols;
 };
 

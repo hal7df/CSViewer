@@ -68,6 +68,8 @@ argData parseArgs (int argc, char* argv[])
 	argData args;
 	bool flag;
 
+	args.persist = 0;
+
 	for (int x = 1; x < argc; x++)
 	{
 		tmp = string(argv[x]);
