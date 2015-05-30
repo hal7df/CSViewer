@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdlib>
+#include <sys/stat.h>
 #include <cctype>
 #include <cstring>
 #include <string>
@@ -11,6 +12,7 @@ using namespace std;
 //COMMANDLINE INTERFACE
 void usageMessage();
 void version();
+void notFound(argData args);
 argData parseArgs (int argc, char* argv[]);
 
 int main (int argc, char* argv[])
@@ -19,19 +21,27 @@ int main (int argc, char* argv[])
 		usageMessage();
 	else
 	{
+		struct stat buf;
+
 		argData args = parseArgs(argc, argv);
-		cout << "Loading..." << endl;
 
-		CSVReader* csv;
-		Viewer* viewer;
+		if (stat(args.fName.c_str(), &buf) == 0)
+		{
+			cout << "Loading..." << endl;
 
-		csv = new CSVReader(args.fName.c_str(),',');
-		viewer = new Viewer (csv,args);
+			CSVReader* csv;
+			Viewer* viewer;
 
-		viewer->view();
+			csv = new CSVReader(args.fName.c_str(),',');
+			viewer = new Viewer (csv,args);
 
-		delete csv;
-		delete viewer;
+			viewer->view();
+
+			delete csv;
+			delete viewer;
+		}
+		else
+			notFound(args);
 	}
 
 	return 0;
@@ -55,10 +65,15 @@ void usageMessage()
 
 void version()
 {
-	cout << "csviewer 0.1-alpha0" << endl;
+	cout << "csviewer 0.1-alpha1" << endl;
 	cout << "Author: Paul Bonnen" << endl;
 
 	exit(0);
+}
+
+void notFound (argData args)
+{
+	cout << "csviewer: error: " << args.fName << ": file not found" << endl;
 }
 
 argData parseArgs (int argc, char* argv[])

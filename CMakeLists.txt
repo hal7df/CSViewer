@@ -11,4 +11,3 @@ add_executable(csviewer main.cpp)
 target_link_libraries(csviewer CSVReader Viewer)
 
 install(TARGETS csviewer DESTINATION bin)
-install(FILES "CSVReader.h" "Viewer.h" DESTINATION obj)
