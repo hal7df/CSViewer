@@ -27,12 +27,12 @@ int main (int argc, char* argv[])
 
 		if (stat(args.fName.c_str(), &buf) == 0)
 		{
-			cout << "Loading..." << endl;
+			cout << "Loading (delimiter '" << args.delim << "')..." << endl;
 
 			CSVReader* csv;
 			Viewer* viewer;
 
-			csv = new CSVReader(args.fName.c_str(),',');
+			csv = new CSVReader(args.fName.c_str(),args.delim);
 			viewer = new Viewer (csv,args);
 
 			viewer->view();
@@ -54,7 +54,8 @@ void usageMessage()
 	cout << "csviewer is a small, commandline CSV file viewer using ncurses." << endl << endl;
 	cout << "Options:" << endl;
 	cout << " -p, --persist <n>\tMake the first n rows persist at top as a header." << endl;
-	cout << " -c, --column <n> [...]\tOnly display column(s) n,..." << endl;
+	//cout << " -c, --column <n> [...]\tOnly display column(s) n,..." << endl;
+	cout << " -d, --delim <c>\tUse 'delimiter' as the field delimiter." << endl;
 	cout << " -v, --version\t\tPrint version number and exit." << endl;
 	cout << " -h, --help\t\tDisplay this help message and exit." << endl << endl;
 	cout << "Arguments:" << endl;
@@ -65,7 +66,7 @@ void usageMessage()
 
 void version()
 {
-	cout << "csviewer 0.1-alpha1" << endl;
+	cout << "csviewer 0.2-alpha0" << endl;
 	cout << "Author: Paul Bonnen" << endl;
 
 	exit(0);
@@ -84,6 +85,7 @@ argData parseArgs (int argc, char* argv[])
 	bool flag;
 
 	args.persist = 0;
+	args.delim = ',';
 
 	for (int x = 1; x < argc; x++)
 	{
@@ -112,6 +114,30 @@ argData parseArgs (int argc, char* argv[])
 					cout << "Error: must specify number of rows to persist." << endl;
 					exit(EXIT_FAILURE);
 				}
+			}
+			else if (tmp.find("delim") != string::npos)
+			{
+					if (args.cols.size() != 0)
+					{
+						cout << "Error: Must specify delimiter before columns." << endl;
+						exit(EXIT_FAILURE);
+					}
+					else
+					{
+						if (argc <= x+1)
+						{
+							cout << "Error: must specify delimiter." << endl;
+							exit(EXIT_FAILURE);
+						}
+						
+						if (strlen(argv[x+1]) > 1)
+						{
+							cout << "Error: can only specify one delimiter." << endl;
+							exit(EXIT_FAILURE);
+						}
+						
+						args.delim = argv[x+1][0];
+					}
 			}
 			else if (tmp.find("column") != string::npos)
 			{
@@ -168,9 +194,9 @@ argData parseArgs (int argc, char* argv[])
 								cout << "Error: must specify number of rows to persist." << endl;
 								exit(EXIT_FAILURE);
 							}
-							for (unsigned z = 0; y < strlen(argv[x+1]); z++)
+							for (unsigned z = 0; z < strlen(argv[x+1]); z++)
 							{
-								if (!isdigit(argv[x+1][y]))
+								if (!isdigit(argv[x+1][z]))
 									flag = true;
 							}
 
@@ -182,6 +208,30 @@ argData parseArgs (int argc, char* argv[])
 								exit(EXIT_FAILURE);
 							}
 						}
+					}
+				}
+				else if (tmp.at(y) == 'd')
+				{
+					if (args.cols.size() != 0)
+					{
+						cout << "Error: Must specify delimiter before columns." << endl;
+						exit(EXIT_FAILURE);
+					}
+					else
+					{
+						if (argc <= x+1)
+						{
+							cout << "Error: must specify delimiter." << endl;
+							exit(EXIT_FAILURE);
+						}
+						
+						if (strlen(argv[x+1]) > 1)
+						{
+							cout << "Error: can only specify one delimiter." << endl;
+							exit(EXIT_FAILURE);
+						}
+						
+						args.delim = argv[x+1][0];
 					}
 				}
 				else if (tmp.at(y) == 'c')

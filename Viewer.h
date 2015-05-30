@@ -16,6 +16,7 @@
 struct argData {
 	string fName;
 	int persist;
+	char delim;
 	vector<int> cols;
 };
 
