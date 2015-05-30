@@ -55,7 +55,7 @@ void usageMessage()
 	cout << "Options:" << endl;
 	cout << " -p, --persist <n>\tMake the first n rows persist at top as a header." << endl;
 	//cout << " -c, --column <n> [...]\tOnly display column(s) n,..." << endl;
-	cout << " -d, --delim <c>\tUse 'delimiter' as the field delimiter." << endl;
+	cout << " -d, --delim <c>\tUse 'c' as the field delimiter." << endl;
 	cout << " -v, --version\t\tPrint version number and exit." << endl;
 	cout << " -h, --help\t\tDisplay this help message and exit." << endl << endl;
 	cout << "Arguments:" << endl;
