@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cstring>
 #include <string>
+#include <getopt.h>
 #include "CSVReader.h"
 #include "Viewer.h"
 using namespace std;
@@ -17,8 +18,7 @@ argData parseArgs (int argc, char* argv[]);
 
 int main (int argc, char* argv[])
 {
-	if (argc < 2)
-		usageMessage();
+	if (argc < 2) usageMessage();
 	else
 	{
 		struct stat buf;
@@ -29,19 +29,12 @@ int main (int argc, char* argv[])
 		{
 			cout << "Loading (delimiter '" << args.delim << "')..." << endl;
 
-			CSVReader* csv;
-			Viewer* viewer;
+			CSVReader csv (args.fName.c_str(), args.delim);
+			Viewer viewer (&csv, args);
 
-			csv = new CSVReader(args.fName.c_str(),args.delim);
-			viewer = new Viewer (csv,args);
-
-			viewer->view();
-
-			delete csv;
-			delete viewer;
+			viewer.view();
 		}
-		else
-			notFound(args);
+		else notFound(args);
 	}
 
 	return 0;
@@ -79,206 +72,55 @@ void notFound (argData args)
 
 argData parseArgs (int argc, char* argv[])
 {
-	string tmp;
-	int offset;
 	argData args;
-	bool flag;
 
 	args.persist = 0;
 	args.delim = ',';
 
-	for (int x = 1; x < argc; x++)
-	{
-		tmp = string(argv[x]);
-		flag = false;
+        const static struct option opts[] = {
+            {"persist", required_argument, nullptr, 'p'},
+            {"delim", required_argument, nullptr, 'd'},
+            {"version", no_argument, nullptr, 'v'},
+            {"help", no_argument, nullptr, 'h'},
+            {nullptr, 0, nullptr, '\0'}
+        };
 
-		if (tmp.find("--") != string::npos)
-		{
-			if (tmp.find("persist") != string::npos)
-			{
-				if (argc <= x+1)
-				{
-					cout << "Error: must specify number of rows to persist." << endl;
-					exit(EXIT_FAILURE);
-				}
-				for (unsigned y = 0; y < strlen(argv[x+1]); y++)
-				{
-					if (!isdigit(argv[x+1][y]))
-						flag = true;
-				}
+        int idx = 0, c;
+        int argStart = 1;
 
-				if (!flag)
-					args.persist = atoi(argv[++x]);
-				else
-				{
-					cout << "Error: must specify number of rows to persist." << endl;
-					exit(EXIT_FAILURE);
-				}
-			}
-			else if (tmp.find("delim") != string::npos)
-			{
-					if (args.cols.size() != 0)
-					{
-						cout << "Error: Must specify delimiter before columns." << endl;
-						exit(EXIT_FAILURE);
-					}
-					else
-					{
-						if (argc <= x+1)
-						{
-							cout << "Error: must specify delimiter." << endl;
-							exit(EXIT_FAILURE);
-						}
-						
-						if (strlen(argv[x+1]) > 1)
-						{
-							cout << "Error: can only specify one delimiter." << endl;
-							exit(EXIT_FAILURE);
-						}
-						
-						args.delim = argv[x+1][0];
-					}
-			}
-			else if (tmp.find("column") != string::npos)
-			{
-				for (int y = x+1; y < argc; y++)
-				{
-					flag = false;
-					for (unsigned z = 0; z < strlen(argv[y]); z++)
-					{
-						if (!isdigit(argv[y][z]))
-							flag = true;
-					}
+        while ((c = getopt_long(argc, argv, "p:d:vh", opts, &idx)) != -1) {
+            switch (c) {
+            case 'p':
+                if (!optarg) {
+                    cerr << "Error: must specify a number of rows to persist" << endl;
+                    exit(EXIT_FAILURE);
+                }
 
-					if (!flag)
-						args.cols.push_back(atoi(argv[y]));
-					else
-					{
-						if (y == x+1)
-						{
-							cout << "Error: must specify column(s)." << endl;
-							exit(EXIT_FAILURE);
-						}
-						break;
-					}
-				}
+                args.persist = atoi(optarg);
+                argStart += 2;
+                break;
+            case 'd':
+                if (!optarg) {
+                    cerr << "Error: must specify a delimiter" << endl;
+                    exit(EXIT_FAILURE);
+                }
 
-				x += args.cols.size();
-			}
-			else if (tmp.find("version") != string::npos)
-				version();
-			else if (tmp.find("help") != string::npos)
-				usageMessage();
-		}
-		else if (tmp.find('-') != string::npos)
-		{
-			for (unsigned y = 1; y < tmp.size(); y++)
-			{
-				if (tmp.at(y) == 'v')
-					version();
-				else if (tmp.at(y) == 'h')
-					usageMessage();
-				else if (tmp.at(y) == 'p')
-				{
-					if (args.persist == 0)
-					{
-						if (args.cols.size() != 0)
-						{
-							cout << "Error: Must specify rows to persist before columns." << endl;
-							exit(EXIT_FAILURE);
-						}
-						else
-						{
-							if (argc <= x+1)
-							{
-								cout << "Error: must specify number of rows to persist." << endl;
-								exit(EXIT_FAILURE);
-							}
-							for (unsigned z = 0; z < strlen(argv[x+1]); z++)
-							{
-								if (!isdigit(argv[x+1][z]))
-									flag = true;
-							}
+                args.delim = *optarg;
+                argStart += 2;
+                break;
+            case 'v':
+                version();
+                break;
+            case 'h':
+                usageMessage();
+                break;
+            default:
+                cerr << "Error: Unknown option '-" << static_cast<char>(c) << '\'' << endl;
+                exit(EXIT_FAILURE);
+                break;
+            }
+        }
 
-							if (!flag)
-								args.persist = atoi(argv[x+1]);
-							else
-							{
-								cout << "Error: must specify number of rows to persist." << endl;
-								exit(EXIT_FAILURE);
-							}
-						}
-					}
-				}
-				else if (tmp.at(y) == 'd')
-				{
-					if (args.cols.size() != 0)
-					{
-						cout << "Error: Must specify delimiter before columns." << endl;
-						exit(EXIT_FAILURE);
-					}
-					else
-					{
-						if (argc <= x+1)
-						{
-							cout << "Error: must specify delimiter." << endl;
-							exit(EXIT_FAILURE);
-						}
-						
-						if (strlen(argv[x+1]) > 1)
-						{
-							cout << "Error: can only specify one delimiter." << endl;
-							exit(EXIT_FAILURE);
-						}
-						
-						args.delim = argv[x+1][0];
-					}
-				}
-				else if (tmp.at(y) == 'c')
-				{
-					if (args.cols.size() == 0)
-					{
-						if (tmp.find('p') != string::npos && tmp.find('p') < tmp.find('c'))
-							offset = x+2;
-						else
-							offset = x+1;
-
-						for (int z = offset; z < argc; z++)
-						{
-							flag = false;
-							for (unsigned a = 0; a < strlen(argv[z]); a++)
-							{
-								if (!isdigit(argv[z][a]))
-									flag = true;
-							}
-
-							if (!flag)
-								args.cols.push_back(atoi(argv[z]));
-							else
-							{
-								if (z == x+1)
-								{
-									cout << "Error: must specify column(s)." << endl;
-									exit(EXIT_FAILURE);
-								}
-								break;
-							}
-						}
-					}
-				}
-			}
-
-			if ((tmp.find('p') != string::npos) || (tmp.find('c') != string::npos))
-			{
-				x += args.cols.size();
-
-				if (args.persist != 0)
-					x++;
-			}
-		}
-		else
-			args.fName = tmp;
-	}
-
+        args.fName = argv[argStart];
 	return args;
 }
